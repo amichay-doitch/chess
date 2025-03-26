@@ -182,12 +182,7 @@ def minimax(board, depth, alpha, beta, maximizing_player):
 
 
 
-def get_best_move_with_time_limitation(board, max_time=5, max_depth=10):
-    """
-    Find the best move using iterative deepening with a time limit.
-    - max_time: Maximum time in seconds to spend searching (default: 2 seconds)
-    - max_depth: Maximum depth to search if time allows (default: 6)
-    """
+def get_best_move_with_time_limitation(board, max_time=10, max_depth=10):
     print(f'Calculating best move (max time: {max_time}s)...')
     if not board.legal_moves:
         return None
@@ -197,42 +192,43 @@ def get_best_move_with_time_limitation(board, max_time=5, max_depth=10):
     best_move = None
     legal_moves = order_moves(board, list(board.legal_moves))
 
-    # Iterative deepening: search deeper levels progressively
+    is_maximizing = board.turn == chess.WHITE  # White maximizes, Black minimizes
     for depth in range(1, max_depth + 1):
         current_time = time.time()
-        elapsed_time_since_last_check = current_time - last_check
-        if elapsed_time_since_last_check >= 10:
-            elapsed_time = current_time - start_time
-            print(f"\rElapsed time: {elapsed_time:.2f} seconds")
-            last_check = current_time  # Reset the last check time
+        if current_time - last_check >= 10:
+            print(f"\rElapsed time: {current_time - start_time:.2f} seconds")
+            last_check = current_time
 
         current_best_move = None
-        best_value = float('-inf')
+        best_value = float('-inf') if is_maximizing else float('inf')
         alpha = float('-inf')
         beta = float('inf')
 
         for move in legal_moves:
             board.push(move)
-            value = minimax(board, depth - 1, alpha, beta, False)
+            value = minimax(board, depth - 1, alpha, beta, not is_maximizing)
             board.pop()
 
-            if value > best_value:
-                best_value = value
-                current_best_move = move
-            alpha = max(alpha, value)
+            if is_maximizing:
+                if value > best_value:
+                    best_value = value
+                    current_best_move = move
+                alpha = max(alpha, value)
+            else:
+                if value < best_value:
+                    best_value = value
+                    current_best_move = move
+                beta = min(beta, value)
 
-            # Check if time is up
             elapsed_time = time.time() - start_time
             if elapsed_time >= max_time:
                 print(f"Time limit reached at depth {depth - 1}. Best move so far returned.")
                 return best_move if best_move else current_best_move
 
-        # If we completed this depth within time, update the best move
         best_move = current_best_move
         print(f"Completed depth {depth} in {time.time() - start_time:.2f}s")
 
     return best_move
-
 
 def get_random_engine_move(board):
     print('Random move!')

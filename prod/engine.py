@@ -182,7 +182,7 @@ def minimax(board, depth, alpha, beta, maximizing_player):
 
 
 
-def get_best_move_with_time_limitation(board, max_time=25, max_depth=10):
+def get_best_move_with_time_limitation(board, max_time=5, max_depth=10):
     """
     Find the best move using iterative deepening with a time limit.
     - max_time: Maximum time in seconds to spend searching (default: 2 seconds)

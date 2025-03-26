@@ -2,7 +2,7 @@ import chess
 import tkinter as tk
 from tkinter import messagebox
 
-from prod.constants import colors
+from prod.constants import colors, unicode_pieces
 
 
 class ChessGUI:
@@ -14,10 +14,6 @@ class ChessGUI:
         self.selected_square = None
 
         # Unicode piece symbols
-        self.unicode_pieces = {
-            'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚', 'p': '♟',
-            'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔', 'P': '♙'
-        }
 
         # Create main frame
         self.main_frame = tk.Frame(root, bg="#1e1e1e")
@@ -94,7 +90,7 @@ class ChessGUI:
                 # Draw piece
                 piece = self.board.piece_at(square)
                 if piece:
-                    symbol = self.unicode_pieces[piece.symbol()]
+                    symbol = unicode_pieces[piece.symbol()]
                     piece_color = colors['Red'] if piece.color == chess.WHITE else colors['Very dark gray']
                     self.canvas.create_text(
                         x1 + self.square_size / 2,

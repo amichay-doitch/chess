@@ -2,6 +2,7 @@ import chess
 from tqdm import tk
 
 from board_display_gui import ChessGUI
+from prod.constants import unicode_pieces
 
 
 def print_board(board):
@@ -14,11 +15,7 @@ def print_board(board):
     BLACK_PIECE = '\033[94m'  # Dark gray
     RESET = '\033[0m'
 
-    unicode_pieces = {
-        'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚', 'p': '♟',
-        'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔', 'P': '♙',
-        '.': '·'
-    }
+
 
     lines.append("\t\ta\tb\tc\td\te\tf\tg\th\t")
     lines.append("\t+\t-\t-\t-\t-\t-\t-\t-\t-\t+")

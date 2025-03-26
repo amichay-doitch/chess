@@ -1,6 +1,8 @@
 import chess
 import random
 import time
+import threading
+from queue import Queue
 
 # Piece-square tables for better positional evaluation (simplified)
 piece_square_tables = {
@@ -71,27 +73,6 @@ def piece_value(piece):
               chess.ROOK: 500, chess.QUEEN: 900, chess.KING: 100000}
     return values.get(piece.piece_type, 0)
 
-
-def evaluate_board(board):
-    if board.is_checkmate():
-        return -100000 if board.turn == chess.WHITE else 100000
-    if board.is_stalemate() or board.is_insufficient_material():
-        return 0
-
-    score = 0
-    for square, piece in board.piece_map().items():
-        value = piece_value(piece)
-        if piece.color == chess.WHITE:
-            score += value
-            if piece.piece_type in piece_square_tables:
-                score += piece_square_tables[piece.piece_type][square]
-        else:
-            score -= value
-            if piece.piece_type in piece_square_tables:
-                score -= piece_square_tables[piece.piece_type][63 - square]  # Flip for Black
-    return score
-
-
 def evaluate_board(board):
     if board.is_checkmate():
         return -100000 if board.turn == chess.WHITE else 100000
@@ -109,82 +90,68 @@ def evaluate_board(board):
             score += value
             if piece.piece_type in piece_square_tables:
                 score += piece_square_tables[piece.piece_type][square]
-            # Penalty for undeveloped pieces on White's back rank (rank 0)
             if piece.piece_type != chess.PAWN and rank == 0:
-                undeveloped_penalty -= 50  # Negative for White
+                undeveloped_penalty -= 50
         else:
             score -= value
             if piece.piece_type in piece_square_tables:
                 score -= piece_square_tables[piece.piece_type][63 - square]
-            # Penalty for undeveloped pieces on Black's back rank (rank 7)
             if piece.piece_type != chess.PAWN and rank == 7:
-                undeveloped_penalty += 50  # Positive for Black (to reduce Black's score)
+                undeveloped_penalty += 50
 
-    # Apply the penalty to the total score
     score += undeveloped_penalty
     return score
 
-
 def order_moves(board, moves):
     """Order moves to maximize alpha-beta pruning efficiency."""
-
     def move_priority(move):
-        # Prioritize captures with a rough estimate of value (MVV-LVA: Most Valuable Victim, Least Valuable Attacker)
         if board.is_capture(move):
             victim = board.piece_at(move.to_square)
             attacker = board.piece_at(move.from_square)
             victim_value = piece_value(victim) if victim else 0
             attacker_value = piece_value(attacker) if attacker else 0
-            return victim_value - attacker_value  # Higher value for capturing high-value pieces with low-value pieces
-        # Prioritize checks
+            return victim_value - attacker_value
         board.push(move)
         is_check = board.is_check()
         board.pop()
-        return 1000 if is_check else 0  # Arbitrary high value for checks
+        return 1000 if is_check else 0
 
     return sorted(moves, key=move_priority, reverse=True)
 
-
 def minimax(board, depth, alpha, beta, maximizing_player):
-    """
-    Minimax with alpha-beta pruning.
-    - alpha: Best score maximizing player can guarantee
-    - beta: Best score minimizing player can guarantee
-    - Pruning occurs when beta <= alpha, meaning the opponent has a better option earlier.
-    """
     if depth == 0 or board.is_game_over():
         return evaluate_board(board)
 
     legal_moves = order_moves(board, list(board.legal_moves))
 
-    if maximizing_player:  # White's turn (maximizing score)
+    if maximizing_player:
         max_eval = float('-inf')
         for move in legal_moves:
             board.push(move)
             eval = minimax(board, depth - 1, alpha, beta, False)
             board.pop()
             max_eval = max(max_eval, eval)
-            alpha = max(alpha, eval)  # Update alpha with the best option found
-            if beta <= alpha:  # Pruning: Opponent won't allow this branch (they have a better beta)
+            alpha = max(alpha, eval)
+            if beta <= alpha:
                 break
         return max_eval
-    else:  # Black's turn (minimizing score)
+    else:
         min_eval = float('inf')
         for move in legal_moves:
             board.push(move)
             eval = minimax(board, depth - 1, alpha, beta, True)
             board.pop()
             min_eval = min(min_eval, eval)
-            beta = min(beta, eval)  # Update beta with the best option found
-            if beta <= alpha:  # Pruning: Maximizing player won't allow this branch (they have a better alpha)
+            beta = min(beta, eval)
+            if beta <= alpha:
                 break
         return min_eval
 
-
-
-def get_best_move_with_time_limitation(board, max_time=10, max_depth=10):
+def get_best_move_with_time_limitation(board, max_time=10, max_depth=10, result_queue=None):
     print(f'Calculating best move (max time: {max_time}s)...')
     if not board.legal_moves:
+        if result_queue:
+            result_queue.put(None)
         return None
 
     start_time = time.time()
@@ -192,7 +159,7 @@ def get_best_move_with_time_limitation(board, max_time=10, max_depth=10):
     best_move = None
     legal_moves = order_moves(board, list(board.legal_moves))
 
-    is_maximizing = board.turn == chess.WHITE  # White maximizes, Black minimizes
+    is_maximizing = board.turn == chess.WHITE
     for depth in range(1, max_depth + 1):
         current_time = time.time()
         if current_time - last_check >= 10:
@@ -223,12 +190,26 @@ def get_best_move_with_time_limitation(board, max_time=10, max_depth=10):
             elapsed_time = time.time() - start_time
             if elapsed_time >= max_time:
                 print(f"Time limit reached at depth {depth - 1}. Best move so far returned.")
+                if result_queue:
+                    result_queue.put(best_move if best_move else current_best_move)
                 return best_move if best_move else current_best_move
 
         best_move = current_best_move
         print(f"Completed depth {depth} in {time.time() - start_time:.2f}s")
 
+    if result_queue:
+        result_queue.put(best_move)
     return best_move
+
+def get_best_move_async(board, max_time=1, max_depth=10):
+    """Run move calculation in a separate thread and return the result via a queue."""
+    result_queue = Queue()
+    thread = threading.Thread(
+        target=get_best_move_with_time_limitation,
+        args=(board.copy(), max_time, max_depth, result_queue)
+    )
+    thread.start()
+    return result_queue
 
 def get_random_engine_move(board):
     print('Random move!')

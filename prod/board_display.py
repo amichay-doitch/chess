@@ -1,21 +1,13 @@
 import chess
-from tqdm import tk
-
-from board_display_gui import ChessGUI
 from prod.constants import unicode_pieces
 
-
-def print_board(board):
+def print_board(board, gui=None):
     lines = []
 
     # ANSI color codes
-    WHITE_PIECE = '\033[97m'  # Bright white
-    BLACK_PIECE = '\033[90m'  # Dark gray
-    WHITE_PIECE = '\033[93m'  # Bright white
-    BLACK_PIECE = '\033[94m'  # Dark gray
+    WHITE_PIECE = '\033[93m'  # Bright yellow (adjusted for visibility)
+    BLACK_PIECE = '\033[94m'  # Bright blue (adjusted for visibility)
     RESET = '\033[0m'
-
-
 
     lines.append("\t\ta\tb\tc\td\te\tf\tg\th\t")
     lines.append("\t+\t-\t-\t-\t-\t-\t-\t-\t-\t+")
@@ -42,49 +34,29 @@ def print_board(board):
     legal_moves = list(board.legal_moves)
     if legal_moves:
         print("Possible moves:")
-
-        # Dictionary to store moves by piece type
         moves_by_piece = {
-            chess.PAWN: [],
-            chess.KNIGHT: [],
-            chess.BISHOP: [],
-            chess.ROOK: [],
-            chess.QUEEN: [],
-            chess.KING: []
+            chess.PAWN: [], chess.KNIGHT: [], chess.BISHOP: [],
+            chess.ROOK: [], chess.QUEEN: [], chess.KING: []
         }
 
-        # Group moves by piece type
         for move in legal_moves:
             piece = board.piece_at(move.from_square)
-            if piece:  # Ensure there’s a piece at the from_square
+            if piece:
                 piece_type = piece.piece_type
                 moves_by_piece[piece_type].append(board.san(move))
 
-        # Piece names for display
         piece_names = {
-            chess.PAWN: "Pawn",
-            chess.KNIGHT: "Knight",
-            chess.BISHOP: "Bishop",
-            chess.ROOK: "Rook",
-            chess.QUEEN: "Queen",
-            chess.KING: "King"
+            chess.PAWN: "Pawn", chess.KNIGHT: "Knight", chess.BISHOP: "Bishop",
+            chess.ROOK: "Rook", chess.QUEEN: "Queen", chess.KING: "King"
         }
 
-        # Print moves for each piece type
         for piece_type, moves in moves_by_piece.items():
-            if moves:  # Only print if there are moves for this piece
+            if moves:
                 print(f"\t\t{piece_names[piece_type]}: {', '.join(moves)}")
     else:
         print("No legal moves available!")
-    import tkinter as tk
-    root = tk.Tk()
-    app = ChessGUI(root,board)
-    root.mainloop()
 
-
-
-
-# Example usage
-if __name__ == "__main__":
-    board = chess.Board()
-    print_board(board)
+    # Update the GUI if provided
+    if gui:
+        gui.draw_board()
+        gui.update_moves()

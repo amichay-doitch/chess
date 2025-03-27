@@ -40,4 +40,5 @@ unicode_pieces = {
     '.': '·'
 }
 
-move_time_for_engine = 5
+move_time_for_engine = 10
+max_depth_for_engine = 10

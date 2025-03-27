@@ -39,3 +39,5 @@ unicode_pieces = {
     'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔', 'P': '♙',
     '.': '·'
 }
+
+move_time_for_engine = 5

@@ -4,6 +4,8 @@ import random
 import tkinter as tk
 from board_display import print_board
 from engine import get_random_engine_move, get_best_move_async
+from prod.constants import move_time_for_engine, max_depth_for_engine
+
 
 def print_outcome(board, gui=None):
     outcomes = {
@@ -20,7 +22,7 @@ def print_outcome(board, gui=None):
                 gui.moves_text.delete(1.0, tk.END)
                 gui.moves_text.insert(tk.END, f"Game Over: {message}")
             return True
-    print("Game continues...")
+    # print("Game continues...")
     return False
 
 def count_pieces(board):
@@ -36,7 +38,7 @@ def random_game(board, white_random, black_random, gui=None, root=None):
         legal_move_count = board.legal_moves.count()
         piece_count = count_pieces(board)
         is_game_over = print_outcome(board, gui)
-        print(f"Debug: legal_moves={legal_move_count}, pieces={piece_count}, game_over={is_game_over}")
+        # print(f"Debug: legal_moves={legal_move_count}, pieces={piece_count}, game_over={is_game_over}")
 
         if legal_move_count == 0 or piece_count <= 2 or is_game_over:
             print("Game loop stopping.")
@@ -54,7 +56,7 @@ def random_game(board, white_random, black_random, gui=None, root=None):
             move = None
             if gui:
                 gui.moves_text.insert(tk.END, f"{player} thinking...\n")
-            result_queue = get_best_move_async(board, max_time=5, max_depth=4)
+            result_queue = get_best_move_async(board, max_time=move_time_for_engine, max_depth=max_depth_for_engine)
             root.after(100, lambda: check_move_result(result_queue, player, move_number))
             return
 
@@ -102,7 +104,7 @@ def human_vs_computer(board, human_color=chess.WHITE, gui=None, root=None):
         legal_move_count = board.legal_moves.count()
         piece_count = count_pieces(board)
         is_game_over = print_outcome(board, gui)
-        print(f"Debug: legal_moves={legal_move_count}, pieces={piece_count}, game_over={is_game_over}, move_stack={len(board.move_stack)}")
+        # print(f"Debug: legal_moves={legal_move_count}, pieces={piece_count}, game_over={is_game_over}, move_stack={len(board.move_stack)}")
 
         if legal_move_count == 0 or piece_count <= 2 or is_game_over:
             print("Game loop stopping.")
@@ -121,7 +123,7 @@ def human_vs_computer(board, human_color=chess.WHITE, gui=None, root=None):
             print(f"{computer_player} to play (computer)...")
             if gui:
                 gui.moves_text.insert(tk.END, "Computer thinking...\n")
-            result_queue = get_best_move_async(board, max_time=5, max_depth=4)
+            result_queue = get_best_move_async(board, max_time=move_time_for_engine, max_depth=max_depth_for_engine)
             root.after(100, lambda: check_computer_move(result_queue, move_number))
         else:
             root.after(100, computer_turn)  # Wait for human move
@@ -145,7 +147,7 @@ def human_vs_computer(board, human_color=chess.WHITE, gui=None, root=None):
                 print(f"Invalid move from engine: {move.uci() if move else 'None'} in {board.fen()}")
                 root.after(100, computer_turn)  # Retry or continue
         else:
-            print("Waiting for computer move...")
+            # print("Waiting for computer move...")
             root.after(100, lambda: check_computer_move(result_queue, move_num))
 
     if root:

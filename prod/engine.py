@@ -4,6 +4,8 @@ import time
 import threading
 from queue import Queue
 
+from prod.constants import move_time_for_engine, max_depth_for_engine
+
 # Piece-square tables for better positional evaluation (simplified)
 piece_square_tables = {
     chess.PAWN: [
@@ -147,7 +149,7 @@ def minimax(board, depth, alpha, beta, maximizing_player):
                 break
         return min_eval
 
-def get_best_move_with_time_limitation(board, max_time=10, max_depth=10, result_queue=None):
+def get_best_move_with_time_limitation(board, max_time=move_time_for_engine, max_depth=max_depth_for_engine, result_queue=None):
     print(f'Calculating best move (max time: {max_time}s)...')
     if not board.legal_moves:
         if result_queue:
@@ -201,7 +203,7 @@ def get_best_move_with_time_limitation(board, max_time=10, max_depth=10, result_
         result_queue.put(best_move)
     return best_move
 
-def get_best_move_async(board, max_time=1, max_depth=10):
+def get_best_move_async(board, max_time=move_time_for_engine, max_depth=max_depth_for_engine):
     """Run move calculation in a separate thread and return the result via a queue."""
     result_queue = Queue()
     thread = threading.Thread(

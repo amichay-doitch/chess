@@ -1,6 +1,8 @@
 import chess
 import tkinter as tk
 from tkinter import messagebox, simpledialog
+
+from prod.board_display import print_board
 from prod.constants import colors, unicode_pieces
 
 class ChessGUI:
@@ -193,6 +195,7 @@ class ChessGUI:
                 self.selected_square = None
                 self.draw_board()
                 self.update_moves()
+                print_board(self.board, self)
             elif self.board.piece_at(square) and self.board.color_at(square) == self.board.turn:
                 self.selected_square = square
                 self.draw_board()  # Redraw to show new selection
@@ -216,5 +219,5 @@ class ChessGUI:
             self.board.push(move)
             self.draw_board()
             self.update_moves()
-        else:
-            print(f"Invalid move attempted: {move.uci()} in position {self.board.fen()}")
+        # else:
+        #     print(f"Invalid move attempted: {move.uci()} in position {self.board.fen()}")

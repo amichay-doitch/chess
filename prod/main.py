@@ -2,6 +2,8 @@ import chess
 import tkinter as tk
 from game_logic import random_game, human_vs_computer
 from board_display_gui import ChessGUI
+from engine import get_random_engine_move, get_best_move_async
+from engine_second import  get_best_move_async_second
 
 def main():
     root = tk.Tk()
@@ -20,9 +22,27 @@ def main():
         black_random = float(input("Black randomness (0-1, 0=best moves): ") or 0.1)
         random_game(board, white_random, black_random, gui, root)
     elif choice == "2":
-        human_vs_computer(board, chess.WHITE, gui, root)
+        print("1. Play engine 1")
+        print("2. Play engine 2")
+        choice = input("Select game mode (1-3): ")
+        if choice == '1':
+            human_vs_computer(get_best_move_async ,board, chess.WHITE, gui, root)
+        elif choice == '2':
+            human_vs_computer(get_best_move_async_second ,board, chess.WHITE, gui, root)
+        else:
+            print("Invalid choice!")
+            root.destroy()
+            return
+
     elif choice == "3":
-        human_vs_computer(board, chess.BLACK, gui, root)
+        if choice == '1':
+            human_vs_computer(get_best_move_async ,board, chess.BLACK, gui, root)
+        elif choice == '2':
+            human_vs_computer(get_best_move_async_second ,board, chess.BLACK, gui, root)
+        else:
+            print("Invalid choice!")
+            root.destroy()
+            return
     else:
         print("Invalid choice!")
         root.destroy()

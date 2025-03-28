@@ -101,7 +101,7 @@ def play_game(white_engine_func, black_engine_func, white_name, black_name, game
             result_queue = move_result
             move = None
             start_time = time.time()
-            while time.time() - start_time < 2 and move is None:  # Wait up to 2 seconds
+            while time.time() - start_time < move_time_for_engine and move is None:  # Wait up to 2 seconds
                 if not result_queue.empty():
                     move = result_queue.get()
                     break

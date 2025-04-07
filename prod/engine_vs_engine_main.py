@@ -5,6 +5,7 @@ from prod.constants import move_time_for_engine, max_depth_for_engine
 from prod.engine import get_random_engine_move, get_best_move_async
 from prod.engine_second import get_best_move_async_second
 from prod.board_display import print_board
+from prod.engine_third import get_best_move_async_third
 from prod.game_logic import print_outcome
 from prod.board_display_gui import ChessGUI  # Import GUI
 import time
@@ -27,7 +28,7 @@ def get_greedy_engine_move(board):
     result_queue = get_best_move_async(board, max_time=1, max_depth=7)
     move = None
     start_time = time.time()
-    while time.time() - start_time < 2 and move is None:
+    while time.time() - start_time < 20 and move is None:
         if not result_queue.empty():
             move = result_queue.get()
             break
@@ -45,6 +46,9 @@ ENGINES = {
     "2": ("Random", get_random_engine_move),
     "3": ("Greedy", get_greedy_engine_move),
     "4": ("Minimax Second", lambda board: get_best_move_async_second(board,
+                                                                     max_time=move_time_for_engine,
+                                                                     max_depth=max_depth_for_engine)),
+    "5": ("Minimax mistral", lambda board: get_best_move_async_third(board,
                                                                      max_time=move_time_for_engine,
                                                                      max_depth=max_depth_for_engine)),
     # Add more engines here as needed (e.g., greedy)
